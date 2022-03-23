@@ -524,7 +524,7 @@ docker exec -it some-nginx /bin/bash
 
 加入反向代理，做服务器集群，开启负载均衡，提高性能。
 
-![See the source image](readme.assets/R-C.5c58b811e8c4f8c6246049a119d80f13)
+![image-20220324021803775](readme.assets/image-20220324021803775.png)
 
 理论上每个web服务器，接收到的request数量是一致的，其实是不一定的，类似rabbitmq消息中间件。
 
