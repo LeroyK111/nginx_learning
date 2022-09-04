@@ -951,3 +951,7 @@ worker_processes * worker_connection/4 = 当成代理服务器时
 
 最大并发数不要让cpu跑满就行。
 
+## nginx配置ssl证书
+
+https://segmentfault.com/a/1190000022673232
+
