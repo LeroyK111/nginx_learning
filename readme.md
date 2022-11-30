@@ -955,3 +955,216 @@ worker_processes * worker_connection/4 = 当成代理服务器时
 
 https://segmentfault.com/a/1190000022673232
 
+https://segmentfault.com/a/1190000039977023
+
+http = request 
+
+https = request + SSL/TLS
+
+ws = websocket
+
+wss = websocket + SSL/TLS
+
+## 配置websocket
+
+流媒体传输需要websocket协议。
+
+```
+http {
+	...其他配置参数
+	
+	# ws无SSL/TLS证书验证流式传输接口
+	server {
+		# 监听外网端口
+		listen 12345;
+		# 需要代理的内网ip
+		proxy_bind 192.168.22.22;
+		# 端口流量控制
+		proxy_buffer_size 16k;
+		# 链接超时
+    	proxy_connect_timeout 10s;
+    	# 限制传输速度,0不限速
+        proxy_download_rate 0;
+    	# 链接超时自动关闭时间
+   		proxy_timeout 1m;
+   		# 如果启用，将保留通过 TCP 的代理，直到双方都关闭连接。
+   		proxy_half_close off;
+   		# 设置外网IP地址
+    	proxy_pass example.com:12345;
+    	# 当无法建立链接时，将链接传递给其他服务器
+        proxy_next_upstream on;
+        # 传递尝试次数
+        proxy_next_upstream_tries 0;
+        # 其他服务器超时时间
+        proxy_next_upstream_timeout 0;
+        # 启动 PROXY协议
+        proxy_protocol off;
+        # 设置udp 接收数据包大小，超过则丢弃
+        proxy_requests 0;
+        # 设置udp，响应数据包大小，超过则终止
+        proxy_responses 0;
+        # 终止所有会话
+        proxy_session_drop off;
+        # ★套接字启动
+        proxy_socket_keepalive on;
+        # 证书验证
+        proxy_ssl on;
+        # PEM格式证书位置，对代理服务器进行身份验证
+        proxy_ssl_certificate file;
+        # 密钥位置
+        proxy_ssl_certificate_key file;
+        # ssl配置密码
+        proxy_ssl_ciphers ciphers;
+        # openssl 命令
+        proxy_ssl_conf_command name value;
+        # crl证书
+        proxy_ssl_crl file;
+        # 服务器名称
+        proxy_ssl_name name;
+        # 密码文件
+        proxy_ssl_password_file file;
+        # 启用指定协议
+        proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        # 禁止传递名字
+        proxy_ssl_server_name off;
+        # 开启ssl会话报错
+        proxy_ssl_session_reuse on;
+        # 可信CA证书
+        proxy_ssl_trusted_certificate file;
+        # 启动服务器证书验证
+        proxy_ssl_verify on;
+        # 证书验证深度
+        proxy_ssl_verify_depth 1;
+        # 读取速度
+        proxy_upload_rate 0;
+        
+        # 路由配置了
+        location / {
+            proxy_http_version 1.1;
+            proxy_pass http://wsbackend;
+            proxy_redirect off; 
+            proxy_set_header Host $host; 
+            proxy_set_header X-Real-IP $remote_addr; 
+            proxy_read_timeout 3600s; 
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; 
+            proxy_set_header Upgrade $http_upgrade; 
+            proxy_set_header Connection $connection_upgrade; 
+        }
+	}
+	
+	# wss配置SSL/TLS证书验证流式传输接口
+    server {
+		# 监听外网端口
+		listen 12345 ssl;
+		# 启用指定的协议
+		ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+		# 指定在使用 SSLv3 和 TLS 协议时，服务器密码应优先于客户端密码。
+        ssl_prefer_server_ciphers on;
+        
+        # 启动alpn
+        ssl_alpn h2 http/1.1;
+        # 握手时间
+        ssl_handshake_timeout 60s;
+        # 密钥文件
+        ssl_password_file file;
+        # file为 DHE 密码 指定带有 DH 参数的 a
+        ssl_dhparam file;
+        # file以用于验证客户端证书的 PEM 格式 指定带有已撤销证书 (CRL) 的 证书。
+        ssl_crl file;
+        # ECDHE 密码
+        ssl_ecdh_curve auto;
+        # 指定file具有用于验证客户端证书的 PEM 格式的可信 CA 证书。
+        ssl_client_certificate file;
+        # 指定启用加密方式
+        ssl_ciphers     AES128-SHA:AES256-SHA:RC4-SHA:DES-CBC3-SHA:RC4-MD5;
+        # 指定file给定服务器的 PEM 格式证书。
+        ssl_certificate     /usr/local/nginx/conf/cert.pem;
+        # file使用 PEM 格式的密钥为给定服务器
+        ssl_certificate_key /usr/local/nginx/conf/cert.key;
+        # 启用或禁用会话恢复
+        ssl_session_tickets on;
+        # file使用用于加密和解密 TLS 会话票证的密钥
+        ssl_session_ticket_key file;
+        # onenssl命令
+        ssl_conf_command name value;
+        # 缓存设置
+        ssl_session_cache   shared:SSL:10m;
+        # 可信ca证书
+        ssl_trusted_certificate file;
+        # 指定客户端可以重用会话参数的时间。
+        ssl_session_timeout 10m;
+        # 启用客户端证书的验证。
+        ssl_verify_client: off
+        # 设置客户端证书链中的验证深度。
+        ssl_verify_depth 1；
+        
+        # PEM格式证书位置，对代理服务器进行身份验证
+        proxy_ssl_certificate file;
+        # 密钥位置
+        proxy_ssl_certificate_key file;
+		# 需要代理的内网ip
+		proxy_bind 192.168.22.22;
+		# 端口流量控制
+		proxy_buffer_size 16k;
+		# 链接超时
+    	proxy_connect_timeout 10s;
+    	# 限制传输速度,0不限速
+        proxy_download_rate 0;
+    	# 链接超时自动关闭时间
+   		proxy_timeout 1m;
+   		# 如果启用，将保留通过 TCP 的代理，直到双方都关闭连接。
+   		proxy_half_close off;
+   		# 设置外网IP地址
+    	proxy_pass example.com:12345;
+    	# 当无法建立链接时，将链接传递给其他服务器
+        proxy_next_upstream on;
+        # 传递尝试次数
+        proxy_next_upstream_tries 0;
+        # 其他服务器超时时间
+        proxy_next_upstream_timeout 0;
+        # 启动 PROXY协议
+        proxy_protocol off;
+        # 设置udp 接收数据包大小，超过则丢弃
+        proxy_requests 0;
+        # 设置udp，响应数据包大小，超过则终止
+        proxy_responses 0;
+        # 终止所有会话
+        proxy_session_drop off;
+        # ★套接字启动
+        proxy_socket_keepalive on;
+        # 证书验证
+        proxy_ssl on;
+       
+        # ssl配置密码
+        proxy_ssl_ciphers ciphers;
+        # openssl 命令
+        proxy_ssl_conf_command name value;
+        # crl证书
+        proxy_ssl_crl file;
+        # 服务器名称
+        proxy_ssl_name name;
+        # 密码文件
+        proxy_ssl_password_file file;
+        # 启用指定协议
+        proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        # 禁止传递名字
+        proxy_ssl_server_name off;
+        # 开启ssl会话报错
+        proxy_ssl_session_reuse on;
+        # 可信CA证书
+        proxy_ssl_trusted_certificate file;
+        # 启动服务器证书验证
+        proxy_ssl_verify on;
+        # 证书验证深度
+        proxy_ssl_verify_depth 1;
+        # 读取速度
+        proxy_upload_rate 0;
+	}
+	
+}
+
+
+
+
+```
+
